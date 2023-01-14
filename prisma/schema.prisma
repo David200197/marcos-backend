@@ -8,137 +8,140 @@ datasource db {
 }
 
 model administrador {
-  idAdministrador Int       @id
-  Nombre          String    @db.VarChar(25)
-  Apellido1       String    @db.VarChar(25)
-  Apellido2       String    @db.VarChar(25)
+  idAdministrador String    @id @default(uuid())
+  nombre          String    @db.VarChar(25)
+  apellido1       String    @db.VarChar(25)
+  apellido2       String    @db.VarChar(25)
   usuario         usuario[]
 }
 
 model artistasaficionados {
-  idArtista                    Int                            @id
-  Nombre                       String                         @db.VarChar(25)
-  Apellido1                    String                         @db.VarChar(25)
-  Apellido2                    String                         @db.VarChar(25)
-  Carrera                      String?                        @db.VarChar(50)
-  Anno                         Int?
-  Activo                       String                         @db.VarChar(5)
-  Premios                      Bytes?                         @db.Blob
-  ManifestacionidManifestacion Int
-  ResponsableidResponsable     Int
-  Facultadid                   Int
-  facultad                     facultad                       @relation(fields: [Facultadid], references: [id], onUpdate: Restrict, map: "FKArtistasAf154326")
-  responsable                  responsable                    @relation(fields: [ResponsableidResponsable], references: [idResponsable], onUpdate: Restrict, map: "FKArtistasAf543529")
-  manifestacion                manifestacion                  @relation(fields: [ManifestacionidManifestacion], references: [idManifestacion], onUpdate: Restrict, map: "FKArtistasAf936665")
+  idArtista                    String                         @id @default(uuid())
+  nombre                       String                         @db.VarChar(25)
+  apellido1                    String                         @db.VarChar(25)
+  apellido2                    String                         @db.VarChar(25)
+  carrera                      String?                        @db.VarChar(50)
+  anno                         Int?
+  activo                       String                         @db.VarChar(5)
+  premios                      Bytes?                         @db.Blob
+  manifestacionidManifestacion String
+  responsableidResponsable     String
+  facultadid                   String
+  facultad                     facultad                       @relation(fields: [facultadid], references: [id], onUpdate: Restrict, map: "FKArtistasAf154326")
+  responsable                  responsable                    @relation(fields: [responsableidResponsable], references: [idResponsable], onUpdate: Restrict, map: "FKArtistasAf543529")
+  manifestacion                manifestacion                  @relation(fields: [manifestacionidManifestacion], references: [idManifestacion], onUpdate: Restrict, map: "FKArtistasAf936665")
   artistasaficionados_trabajos artistasaficionados_trabajos[]
   usuario                      usuario[]
 
-  @@index([Facultadid], map: "FKArtistasAf154326")
-  @@index([ResponsableidResponsable], map: "FKArtistasAf543529")
-  @@index([ManifestacionidManifestacion], map: "FKArtistasAf936665")
+  @@index([facultadid], map: "FKArtistasAf154326")
+  @@index([responsableidResponsable], map: "FKArtistasAf543529")
+  @@index([manifestacionidManifestacion], map: "FKArtistasAf936665")
 }
 
 model artistasaficionados_trabajos {
-  ArtistasAficionadosidArtista Int
-  TrabajosidTrabajo            Int
-  trabajos                     trabajos            @relation(fields: [TrabajosidTrabajo], references: [idTrabajo], onUpdate: Restrict, map: "FKArtistasAf889729")
-  artistasaficionados          artistasaficionados @relation(fields: [ArtistasAficionadosidArtista], references: [idArtista], onUpdate: Restrict, map: "FKArtistasAf93177")
+  artistasAficionadosidArtista String
+  trabajosidTrabajo            String
+  trabajos                     trabajos            @relation(fields: [trabajosidTrabajo], references: [idTrabajo], onUpdate: Restrict, map: "FKArtistasAf889729")
+  artistasaficionados          artistasaficionados @relation(fields: [artistasAficionadosidArtista], references: [idArtista], onUpdate: Restrict, map: "FKArtistasAf93177")
 
-  @@id([ArtistasAficionadosidArtista, TrabajosidTrabajo])
-  @@index([TrabajosidTrabajo], map: "FKArtistasAf889729")
-  @@index([ArtistasAficionadosidArtista], map: "FKArtistasAf93177")
+  @@id([artistasAficionadosidArtista, trabajosidTrabajo])
+  @@index([trabajosidTrabajo], map: "FKArtistasAf889729")
+  @@index([artistasAficionadosidArtista], map: "FKArtistasAf93177")
 }
 
 model eventos {
-  idEvento              Int                     @id
-  Tipo                  String                  @db.VarChar(25)
-  Nombre                String                  @db.VarChar(25)
-  Institucion           String                  @db.VarChar(255)
-  Fecha                 DateTime                @db.DateTime(0)
+  idEvento              String                  @id @default(uuid())
+  tipo                  String                  @db.VarChar(25)
+  nombre                String                  @db.VarChar(25)
+  institucion           String                  @db.VarChar(255)
+  fecha                 DateTime                @db.DateTime(0)
   eventos_manifestacion eventos_manifestacion[]
 }
 
 model eventos_manifestacion {
-  EventosidEvento              Int
-  ManifestacionidManifestacion Int
-  manifestacion                manifestacion @relation(fields: [ManifestacionidManifestacion], references: [idManifestacion], onUpdate: Restrict, map: "FKEventos_Ma312847")
-  eventos                      eventos       @relation(fields: [EventosidEvento], references: [idEvento], onUpdate: Restrict, map: "FKEventos_Ma844416")
+  eventosidEvento              String
+  manifestacionidManifestacion String
+  manifestacion                manifestacion @relation(fields: [manifestacionidManifestacion], references: [idManifestacion], onUpdate: Restrict, map: "FKEventos_Ma312847")
+  eventos                      eventos       @relation(fields: [eventosidEvento], references: [idEvento], onUpdate: Restrict, map: "FKEventos_Ma844416")
 
-  @@id([EventosidEvento, ManifestacionidManifestacion])
-  @@index([ManifestacionidManifestacion], map: "FKEventos_Ma312847")
-  @@index([EventosidEvento], map: "FKEventos_Ma844416")
+  @@id([eventosidEvento, manifestacionidManifestacion])
+  @@index([manifestacionidManifestacion], map: "FKEventos_Ma312847")
+  @@index([eventosidEvento], map: "FKEventos_Ma844416")
 }
 
 model facultad {
-  id                  Int                   @id @default(autoincrement())
+  id                  String                @id @default(uuid())
   nombre              String                @db.VarChar(255)
   artistasaficionados artistasaficionados[]
 }
 
 model manifestacion {
-  idManifestacion       Int                     @id
-  Nombre                String                  @db.VarChar(25)
-  Genero                String                  @db.VarChar(25)
+  idManifestacion       String                  @id @default(uuid())
+  nombre                String                  @db.VarChar(25)
+  genero                String                  @db.VarChar(25)
   artistasaficionados   artistasaficionados[]
   eventos_manifestacion eventos_manifestacion[]
   responsable           responsable[]
 }
 
 model noticiasculturales {
-  id                       Int         @id
-  Titulo                   String      @db.VarChar(25)
-  Autor                    String      @db.VarChar(25)
-  Fecha_Publicacion        DateTime    @db.DateTime(0)
-  ResponsableidResponsable Int
-  responsable              responsable @relation(fields: [ResponsableidResponsable], references: [idResponsable], onUpdate: Restrict, map: "FKNoticiasCu824988")
+  id                       String      @id @default(uuid())
+  titulo                   String      @db.VarChar(25)
+  autor                    String      @db.VarChar(25)
+  fecha_Publicacion        DateTime    @db.DateTime(0)
+  responsableidResponsable String
+  responsable              responsable @relation(fields: [responsableidResponsable], references: [idResponsable], onUpdate: Restrict, map: "FKNoticiasCu824988")
 
-  @@index([ResponsableidResponsable], map: "FKNoticiasCu824988")
+  @@index([responsableidResponsable], map: "FKNoticiasCu824988")
 }
 
 model responsable {
-  idResponsable                 Int                   @id
-  Nombre                        String                @db.VarChar(25)
-  Apellido1                     String                @db.VarChar(25)
-  Apellido2                     String                @db.VarChar(25)
-  Procedencia                   String                @db.VarChar(25)
-  ManifestacionidManifestacion2 Int
-  manifestacion                 manifestacion         @relation(fields: [ManifestacionidManifestacion2], references: [idManifestacion], onUpdate: Restrict, map: "FKResponsabl466609")
+  idResponsable                 String                @id @default(uuid())
+  nombre                        String                @db.VarChar(25)
+  apellido1                     String                @db.VarChar(25)
+  apellido2                     String                @db.VarChar(25)
+  procedencia                   String                @db.VarChar(25)
+  manifestacionidManifestacion2 String
+  manifestacion                 manifestacion         @relation(fields: [manifestacionidManifestacion2], references: [idManifestacion], onUpdate: Restrict, map: "FKResponsabl466609")
   artistasaficionados           artistasaficionados[]
   noticiasculturales            noticiasculturales[]
+  usuario                       usuario[]
 
-  @@index([ManifestacionidManifestacion2], map: "FKResponsabl466609")
+  @@index([manifestacionidManifestacion2], map: "FKResponsabl466609")
 }
 
 model role {
-  id      Int       @id
-  Tipo    String    @db.VarChar(25)
+  id      String    @id @default(uuid())
+  tipo    String    @db.VarChar(25)
   usuario usuario[]
 }
 
 model trabajos {
-  idTrabajo                    Int                            @id
-  Autor                        String                         @db.VarChar(25)
-  Titulo                       String                         @unique(map: "Titulo") @db.VarChar(255)
-  Anno                         Int                            @db.Year
-  Lugar_Obtenido               String?                        @db.VarChar(25)
-  Trabajos                     Bytes                          @db.Blob
+  idTrabajo                    String                         @id @default(uuid())
+  autor                        String                         @db.VarChar(25)
+  titulo                       String                         @unique(map: "Titulo") @db.VarChar(255)
+  anno                         Int                            @db.Year
+  lugar_Obtenido               String?                        @db.VarChar(25)
+  trabajos                     Bytes                          @db.Blob
   artistasaficionados_trabajos artistasaficionados_trabajos[]
 }
 
 model usuario {
-  idUsuario                    Int                  @id
-  Nombre                       String               @db.VarChar(25)
-  Correo                       String               @unique(map: "Correo") @db.VarChar(25)
-  Contrasena                   String               @db.VarChar(255)
-  ArtistasAficionadosidArtista Int?
-  ResponsableidResponsable     Int?
-  AdministradoridAdministrador Int?
-  Roleid                       Int
-  administrador                administrador?       @relation(fields: [AdministradoridAdministrador], references: [idAdministrador], onDelete: Restrict, onUpdate: Restrict, map: "FKUsuario10775")
-  role                         role                 @relation(fields: [Roleid], references: [id], onUpdate: Restrict, map: "FKUsuario183683")
-  artistasaficionados          artistasaficionados? @relation(fields: [ArtistasAficionadosidArtista], references: [idArtista], onDelete: Restrict, onUpdate: Restrict, map: "FKUsuario842133")
+  idUsuario                    String               @id @default(uuid())
+  nombre                       String               @db.VarChar(25)
+  correo                       String               @unique(map: "Correo") @db.VarChar(25)
+  contrasena                   String               @db.VarChar(255)
+  artistasAficionadosidArtista String?
+  responsableidResponsable     String?
+  administradoridAdministrador String?
+  roleid                       String
+  administrador                administrador?       @relation(fields: [administradoridAdministrador], references: [idAdministrador], onDelete: Restrict, onUpdate: Restrict, map: "FKUsuario10775")
+  role                         role                 @relation(fields: [roleid], references: [id], onUpdate: Restrict, map: "FKUsuario183683")
+  artistasaficionados          artistasaficionados? @relation(fields: [artistasAficionadosidArtista], references: [idArtista], onDelete: Restrict, onUpdate: Restrict, map: "FKUsuario842133")
+  responsable                  responsable?         @relation(fields: [responsableidResponsable], references: [idResponsable], onDelete: Restrict, onUpdate: Restrict, map: "FKUsuario568733")
 
-  @@index([AdministradoridAdministrador], map: "FKUsuario10775")
-  @@index([Roleid], map: "FKUsuario183683")
-  @@index([ArtistasAficionadosidArtista], map: "FKUsuario842133")
+  @@index([administradoridAdministrador], map: "FKUsuario10775")
+  @@index([roleid], map: "FKUsuario183683")
+  @@index([artistasAficionadosidArtista], map: "FKUsuario842133")
+  @@index([responsableidResponsable], map: "FKUsuario568733")
 }
