@@ -10,13 +10,125 @@ const logger = new Logger();
 
 const emailRegExp =
   /(?:(?:[\w`~!#$%^&*\-=+;:{}'|,?\/]+(?:(?:\.(?:"(?:\\?[\w`~!#$%^&*\-=+;:{}'|,?\/\.()<>\[\] @]|\\"|\\\\)*"|[\w`~!#$%^&*\-=+;:{}'|,?\/]+))*\.[\w`~!#$%^&*\-=+;:{}'|,?\/]+)?)|(?:"(?:\\?[\w`~!#$%^&*\-=+;:{}'|,?\/\.()<>\[\] @]|\\"|\\\\)+"))@(?:[a-zA-Z\d\-]+(?:\.[a-zA-Z\d\-]+)*|\[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\])$/;
-
 const passwordRegExp = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
 
+const ADMIN = 'administrador';
+const ARTIST = 'artista aficionado';
+const RESP = 'responsable';
+
+const addDataAdmin = async (user) => {
+  const administrador = await prisma.administrador.create({ data: {} });
+  await prisma.usuario.update({
+    where: {
+      idUsuario: user.idUsuario,
+    },
+    data: {
+      administradoridAdministrador: administrador.idAdministrador,
+    },
+  });
+  logger.log('se agrego los datos del administrador');
+};
+
+const addDataArtist = async (user) => {
+  const carrera = await input(
+    'Introduzca la carrera a la que pertenece el usuario',
+    {
+      required: true,
+    },
+  );
+  const activoAnswer = await inputSelect(
+    'El usuario se encuentra activo en la universidad?',
+    ['si', 'no'],
+  );
+  const activo = activoAnswer === 'si' ? true : false;
+  let anno;
+  if (activoAnswer === 'si') {
+    while (true) {
+      anno = +(await input('Introduzca el año que esta cursando el usuario', {
+        required: true,
+      }));
+      if (isNaN(anno)) {
+        Logger.error('su selección no es un numero');
+        continue;
+      }
+      break;
+    }
+  }
+  let premios;
+  while (true) {
+    premios = +(await input('Numero de premios del usuario', {
+      required: true,
+    }));
+    if (isNaN(premios)) {
+      Logger.error('su selección no es un numero');
+      continue;
+    }
+    break;
+  }
+  const artistaAficionado = await prisma.artistasaficionados.create({
+    data: { carrera, activo, anno, premios },
+  });
+  await prisma.usuario.update({
+    where: {
+      idUsuario: user.idUsuario,
+    },
+    data: {
+      artistasAficionadosidArtista: artistaAficionado.idArtista,
+    },
+  });
+  logger.log('se agrego los datos del artista aficionado');
+};
+
+const addDataResp = async (user) => {
+  const procedencia = await input('Procedencia del usuario', {
+    required: true,
+  });
+  let premios;
+  while (true) {
+    premios = +(await input('Numero de premios del usuario', {
+      required: true,
+    }));
+    if (isNaN(premios)) {
+      Logger.error('su selección no es un numero');
+      continue;
+    }
+    break;
+  }
+  let numeroDeTelefono;
+  while (true) {
+    numeroDeTelefono = await input('Numero de telefono del usuario', {
+      required: true,
+    });
+    if (numeroDeTelefono.length === '8') {
+      Logger.error('su selección no es un numero');
+      continue;
+    }
+    break;
+  }
+  const responsable = await prisma.responsable.create({
+    data: { procedencia, premios, numeroDeTelefono },
+  });
+  await prisma.usuario.update({
+    where: {
+      idUsuario: user.idUsuario,
+    },
+    data: {
+      responsableidResponsable: responsable.idResponsable,
+    },
+  });
+  logger.log('se agrego los datos del responsable');
+};
+
+const addDataRoleList = {
+  [RESP]: addDataResp,
+  [ADMIN]: addDataAdmin,
+  [ARTIST]: addDataArtist,
+};
+
 const createRole = async () => {
-  await prisma.role.create({ data: { tipo: 'administrador' } });
-  await prisma.role.create({ data: { tipo: 'artista aficionado' } });
-  await prisma.role.create({ data: { tipo: 'responsable' } });
+  await prisma.role.create({ data: { tipo: ADMIN } });
+  await prisma.role.create({ data: { tipo: ARTIST } });
+  await prisma.role.create({ data: { tipo: RESP } });
   return await prisma.role.findMany();
 };
 
@@ -24,32 +136,47 @@ async function bootstrap() {
   try {
     await prisma.$connect();
     logger.log('empezando script: crear usuario');
-    const nombre = await input(
-      'Introduzca el nombre y los apellidos del usuario (separado por espacios)',
+    const nombre = await input('Introduzca el nombre del usuario', {
+      required: true,
+    });
+    const apellido1 = await input('Introduzca el primer apellido del usuario', {
+      required: true,
+    });
+    const apellido2 = await input(
+      'Introduzca el segundo apellido del usuario',
       {
         required: true,
       },
     );
-    if (nombre.split(' ').length !== 3)
-      throw new NotAcceptableException('Debe ser el nombre y 2 apellidos');
-
-    const contrasena = await input('Introduzca la contraseña del usuario', {
-      required: true,
-    });
-    if (!contrasena.match(passwordRegExp))
-      throw new NotAcceptableException(
-        `la contraseña debe contener:
-        -al menos 8 caracteres
-        -al menos una letra mayúscula, una minúscula y un numero
-        -al menos un caracter especial`,
-      );
+    let contrasena;
+    while (true) {
+      contrasena = await input('Introduzca la contraseña del usuario', {
+        required: true,
+      });
+      if (!contrasena.match(passwordRegExp)) {
+        logger.error(
+          `la contraseña debe contener:
+          -al menos 8 caracteres
+          -al menos una letra mayúscula, una minúscula y un numero
+          -al menos un caracter especial`,
+        );
+        continue;
+      }
+      break;
+    }
     const hashedPassword = await hash(contrasena, 12);
 
-    const correo = await input('Introduzca el correo del usuario', {
-      required: true,
-    });
-    if (!correo.match(emailRegExp))
-      throw new NotAcceptableException('correo inválido');
+    let correo;
+    while (true) {
+      correo = await input('Introduzca el correo del usuario', {
+        required: true,
+      });
+      if (!correo.match(emailRegExp)) {
+        logger.error('correo inválido');
+        continue;
+      }
+      break;
+    }
 
     let roles = await prisma.role.findMany();
     if (!roles.length) {
@@ -64,11 +191,21 @@ async function bootstrap() {
       options,
     );
     const role = roles[selectedIndex - 1];
+    const addDataRole = addDataRoleList[role.tipo];
 
-    await prisma.usuario.create({
-      data: { nombre, correo, contrasena: hashedPassword, roleid: role.id },
+    const user = await prisma.usuario.create({
+      data: {
+        nombre,
+        correo,
+        contrasena: hashedPassword,
+        roleid: role.id,
+        apellido1,
+        apellido2,
+      },
     });
     logger.log('usuario creado');
+
+    await addDataRole(user);
 
     await prisma.$disconnect();
   } catch (error) {

@@ -5,7 +5,7 @@
       "type": "node-terminal",
       "name": "Debug Current JS File (node)",
       "request": "launch",
-      "command": "node -- ${fileBasenameNoExtension}",
+      "command": "npm run script:add-user",
       "cwd": "${fileDirname}"
     },
     {

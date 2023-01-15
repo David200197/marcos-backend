@@ -9,27 +9,21 @@ datasource db {
 
 model administrador {
   idAdministrador String    @id @default(uuid())
-  nombre          String    @db.VarChar(25)
-  apellido1       String    @db.VarChar(25)
-  apellido2       String    @db.VarChar(25)
   usuario         usuario[]
 }
 
 model artistasaficionados {
   idArtista                    String                         @id @default(uuid())
-  nombre                       String                         @db.VarChar(25)
-  apellido1                    String                         @db.VarChar(25)
-  apellido2                    String                         @db.VarChar(25)
   carrera                      String?                        @db.VarChar(50)
   anno                         Int?
-  activo                       String                         @db.VarChar(5)
-  premios                      Bytes?                         @db.Blob
-  manifestacionidManifestacion String
-  responsableidResponsable     String
-  facultadid                   String
-  facultad                     facultad                       @relation(fields: [facultadid], references: [id], onUpdate: Restrict, map: "FKArtistasAf154326")
-  responsable                  responsable                    @relation(fields: [responsableidResponsable], references: [idResponsable], onUpdate: Restrict, map: "FKArtistasAf543529")
-  manifestacion                manifestacion                  @relation(fields: [manifestacionidManifestacion], references: [idManifestacion], onUpdate: Restrict, map: "FKArtistasAf936665")
+  activo                       Boolean
+  premios                      Int?                           @default(0)
+  manifestacionidManifestacion String?
+  responsableidResponsable     String?
+  facultadid                   String?
+  facultad                     facultad?                       @relation(fields: [facultadid], references: [id], onUpdate: Restrict, map: "FKArtistasAf154326")
+  responsable                  responsable?                    @relation(fields: [responsableidResponsable], references: [idResponsable], onUpdate: Restrict, map: "FKArtistasAf543529")
+  manifestacion                manifestacion?                  @relation(fields: [manifestacionidManifestacion], references: [idManifestacion], onUpdate: Restrict, map: "FKArtistasAf936665")
   artistasaficionados_trabajos artistasaficionados_trabajos[]
   usuario                      usuario[]
 
@@ -97,12 +91,11 @@ model noticiasculturales {
 
 model responsable {
   idResponsable                 String                @id @default(uuid())
-  nombre                        String                @db.VarChar(25)
-  apellido1                     String                @db.VarChar(25)
-  apellido2                     String                @db.VarChar(25)
   procedencia                   String                @db.VarChar(25)
-  manifestacionidManifestacion2 String
-  manifestacion                 manifestacion         @relation(fields: [manifestacionidManifestacion2], references: [idManifestacion], onUpdate: Restrict, map: "FKResponsabl466609")
+  numeroDeTelefono              String
+  premios                       Int?                  @default(0)
+  manifestacionidManifestacion2 String?
+  manifestacion                 manifestacion?         @relation(fields: [manifestacionidManifestacion2], references: [idManifestacion], onUpdate: Restrict, map: "FKResponsabl466609")
   artistasaficionados           artistasaficionados[]
   noticiasculturales            noticiasculturales[]
   usuario                       usuario[]
@@ -129,6 +122,8 @@ model trabajos {
 model usuario {
   idUsuario                    String               @id @default(uuid())
   nombre                       String               @db.VarChar(25)
+  apellido1                    String               @db.VarChar(25)
+  apellido2                    String               @db.VarChar(25)
   correo                       String               @unique(map: "Correo") @db.VarChar(25)
   contrasena                   String               @db.VarChar(255)
   artistasAficionadosidArtista String?
