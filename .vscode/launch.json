@@ -3,7 +3,7 @@
   "configurations": [
     {
       "type": "node-terminal",
-      "name": "Debug Current JS File (node)",
+      "name": "Debug Script (node)",
       "request": "launch",
       "command": "npm run script:add-user",
       "cwd": "${fileDirname}"

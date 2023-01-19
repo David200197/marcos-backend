@@ -72,7 +72,6 @@ model facultad {
 model manifestacion {
   idManifestacion       String                  @id @default(uuid())
   nombre                String                  @db.VarChar(25)
-  genero                String                  @db.VarChar(25)
   artistasaficionados   artistasaficionados[]
   eventos_manifestacion eventos_manifestacion[]
   responsable           responsable[]

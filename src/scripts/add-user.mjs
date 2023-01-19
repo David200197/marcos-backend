@@ -16,7 +16,20 @@ const ADMIN = 'administrador';
 const ARTIST = 'artista aficionado';
 const RESP = 'responsable';
 
-const addDataAdmin = async (user) => {
+const advanceSelectOption = async (text, entities, property) => {
+  const options = entities.map((_, index) => index + 1);
+  const textSelect = entities.map(
+    (entity, index) => `${index + 1}-${entity[property]}`,
+  );
+
+  const facultadSelectedIndex = await inputSelect(
+    `${text} \n${textSelect.join('\n')}\n`,
+    options,
+  );
+  return entities[facultadSelectedIndex - 1];
+};
+
+const addDataAdmin = async ({ user }) => {
   const administrador = await prisma.administrador.create({ data: {} });
   await prisma.usuario.update({
     where: {
@@ -29,7 +42,7 @@ const addDataAdmin = async (user) => {
   logger.log('se agrego los datos del administrador');
 };
 
-const addDataArtist = async (user) => {
+const addDataArtist = async ({ user, manifestaciones, facultades }) => {
   const carrera = await input(
     'Introduzca la carrera a la que pertenece el usuario',
     {
@@ -65,9 +78,30 @@ const addDataArtist = async (user) => {
     }
     break;
   }
+
+  const manifestacion = await advanceSelectOption(
+    'Selecciona la manifestacion del artista',
+    manifestaciones,
+    'nombre',
+  );
+
+  const facultad = await advanceSelectOption(
+    'Selecciona la facultad del artista',
+    facultades,
+    'nombre',
+  );
+
   const artistaAficionado = await prisma.artistasaficionados.create({
-    data: { carrera, activo, anno, premios },
+    data: {
+      carrera,
+      activo,
+      anno,
+      premios,
+      manifestacionidManifestacion: manifestacion.idManifestacion,
+      facultadid: facultad.id,
+    },
   });
+
   await prisma.usuario.update({
     where: {
       idUsuario: user.idUsuario,
@@ -79,7 +113,7 @@ const addDataArtist = async (user) => {
   logger.log('se agrego los datos del artista aficionado');
 };
 
-const addDataResp = async (user) => {
+const addDataResp = async ({ user, manifestaciones, facultades }) => {
   const procedencia = await input('Procedencia del usuario', {
     required: true,
   });
@@ -105,8 +139,20 @@ const addDataResp = async (user) => {
     }
     break;
   }
+
+  const manifestacion = await advanceSelectOption(
+    'Selecciona la manifestacion del artista',
+    manifestaciones,
+    'nombre',
+  );
+
   const responsable = await prisma.responsable.create({
-    data: { procedencia, premios, numeroDeTelefono },
+    data: {
+      procedencia,
+      premios,
+      numeroDeTelefono,
+      manifestacionidManifestacion2: manifestacion.idManifestacion,
+    },
   });
   await prisma.usuario.update({
     where: {
@@ -132,10 +178,52 @@ const createRole = async () => {
   return await prisma.role.findMany();
 };
 
+const createManifestacion = async () => {
+  await prisma.manifestacion.create({ data: { nombre: 'Literatura' } });
+  await prisma.manifestacion.create({ data: { nombre: 'Artes Visuales' } });
+  await prisma.manifestacion.create({ data: { nombre: 'Musica' } });
+  await prisma.manifestacion.create({ data: { nombre: 'Danza' } });
+  await prisma.manifestacion.create({ data: { nombre: 'Audiovisuales' } });
+  await prisma.manifestacion.create({ data: { nombre: 'Artes Escénicas' } });
+  return await prisma.manifestacion.findMany();
+};
+
+const createFacultad = async () => {
+  await prisma.facultad.create({
+    data: { nombre: 'Ciencias Sociales y Humanidades' },
+  });
+  await prisma.facultad.create({ data: { nombre: 'Ciencias Tecnicas' } });
+  await prisma.facultad.create({ data: { nombre: 'Ciencias Económicas' } });
+  await prisma.facultad.create({ data: { nombre: 'Ciencias Agropecuarias' } });
+  await prisma.facultad.create({
+    data: { nombre: 'Ciencias De La Cultura Física' },
+  });
+  await prisma.facultad.create({ data: { nombre: 'Industrial' } });
+  await prisma.facultad.create({ data: { nombre: 'Idioma' } });
+  await prisma.facultad.create({ data: { nombre: 'Educación' } });
+  return await prisma.facultad.findMany();
+};
+
 async function bootstrap() {
   try {
-    await prisma.$connect();
     logger.log('empezando script: crear usuario');
+    await prisma.$connect();
+
+    let roles = await prisma.role.findMany();
+    if (!roles.length) {
+      roles = await createRole();
+    }
+
+    let manifestaciones = await prisma.manifestacion.findMany();
+    if (!manifestaciones.length) {
+      manifestaciones = await createManifestacion();
+    }
+
+    let facultades = await prisma.facultad.findMany();
+    if (!facultades.length) {
+      facultades = await createFacultad();
+    }
+
     const nombre = await input('Introduzca el nombre del usuario', {
       required: true,
     });
@@ -175,22 +263,20 @@ async function bootstrap() {
         logger.error('correo inválido');
         continue;
       }
+      const user = await prisma.usuario.findUnique({ where: { correo } });
+      if (user) {
+        logger.error('El correo ya existe');
+        continue;
+      }
       break;
     }
 
-    let roles = await prisma.role.findMany();
-    if (!roles.length) {
-      roles = await createRole();
-    }
-
-    const options = roles.map((_, index) => index + 1);
-    const textSelect = roles.map((role, index) => `${index + 1}-${role.tipo}`);
-
-    const selectedIndex = await inputSelect(
-      `Selecciona el rol del ususario \n${textSelect.join('\n')}\n`,
-      options,
+    const role = await advanceSelectOption(
+      'Selecciona la facultad del artista',
+      roles,
+      'tipo',
     );
-    const role = roles[selectedIndex - 1];
+
     const addDataRole = addDataRoleList[role.tipo];
 
     const user = await prisma.usuario.create({
@@ -205,7 +291,7 @@ async function bootstrap() {
     });
     logger.log('usuario creado');
 
-    await addDataRole(user);
+    await addDataRole({ user, manifestaciones, facultades });
 
     await prisma.$disconnect();
   } catch (error) {

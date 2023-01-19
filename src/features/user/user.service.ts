@@ -7,6 +7,18 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
+  private findInclude = {
+    role: true,
+    administrador: true,
+    artistasaficionados: {
+      include: {
+        responsable: true,
+        manifestacion: true,
+        facultad: true,
+      },
+    },
+    responsable: { include: { manifestacion: true } },
+  };
   constructor(private readonly prismaService: PrismaService) {}
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
@@ -19,12 +31,7 @@ export class UserService {
   async findOne(id: string) {
     const user = await this.prismaService.usuario.findUnique({
       where: { idUsuario: id },
-      include: {
-        role: true,
-        administrador: true,
-        artistasaficionados: true,
-        responsable: true,
-      },
+      include: this.findInclude,
     });
     if (!user) {
       throw new NotFoundException('usuario no encontrado');
@@ -35,12 +42,7 @@ export class UserService {
   async findBy({ correo }: FindByDto) {
     const user = await this.prismaService.usuario.findUnique({
       where: { correo },
-      include: {
-        role: true,
-        administrador: true,
-        artistasaficionados: true,
-        responsable: true,
-      },
+      include: this.findInclude,
     });
     if (!user) {
       throw new NotFoundException('usuario no encontrado');
